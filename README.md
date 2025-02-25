@@ -1,6 +1,7 @@
 # BreathEasy - A Breathing App
 
 A simple web application designed to guide users through a breathing exercise for relaxation and mindfulness. Built with HTML, CSS, and vanilla JavaScript.
+
 live project : https://breatheasy.vercel.app/
 
 ## Features
