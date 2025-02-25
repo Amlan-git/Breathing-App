@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathing App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1> BreatheEasy </h1>
+        <h3> be mindful & focus on your breathing! :) </h3>
+    </header>
+
+    <main>
+        <div class="app-container">
+            <div class="breathing-container">
+                <div class="breathing-circle">
+                    <div class="breathing-text">Breathe</div>
+                    <div class="breathing-instruction">Get ready...</div>
+                </div>
+                
+                <div class="controls">
+                    <button id="start-btn" class="btn">Start</button>
+                    <button id="pause-btn" class="btn" disabled>Pause</button>
+                    <button id="stop-btn" class="btn" disabled>Stop</button>
+                </div>
+            </div>
+
+            <div class="settings">
+                <div class="setting-group">
+                    <label for="inhale-time">Inhale (seconds):</label>
+                    <input type="number" id="inhale-time" value="4" min="1" max="30">
+                </div>
+                <div class="setting-group">
+                    <label for="hold-time">Hold (seconds):</label>
+                    <input type="number" id="hold-time" value="4" min="1" max="30">
+                </div>
+                <div class="setting-group">
+                    <label for="exhale-time">Exhale (seconds):</label>
+                    <input type="number" id="exhale-time" value="4" min="1" max="30">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Breathing App by Amlan. Take a deep breath & relax! :)</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
