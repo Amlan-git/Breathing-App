@@ -3,51 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Breathing App</title>
+    <meta name="description" content="A mindful breathing exercise app with customizable patterns and themes">
+    <title>Mindful Breathing Exercise</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Preload critical assets -->
+    <link rel="preload" href="images/ocean.jpg" as="image">
+    <link rel="preload" href="sounds/ocean.mp3" as="audio">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3498db">
 </head>
 <body>
-    <header>
-        <h1> BreatheEasy </h1>
-        <h3> be mindful & focus on your breathing! :) </h3>
-    </header>
-
-    <main>
-        <div class="app-container">
-            <div class="breathing-container">
-                <div class="breathing-circle">
-                    <div class="breathing-text">Breathe</div>
-                    <div class="breathing-instruction">Get ready...</div>
+    <div class="app-container">
+        <div class="theme-background"></div>
+        
+        <header>
+            <h1> BreatheEasy </h1>
+        </header>
+        
+        <main>
+            <div class="content-wrapper">
+                <div class="breathing-container">
+                    <div class="vase-container">
+                        <div class="vase">
+                            <div class="water">
+                                <div class="ripple"></div>
+                                <div class="countdown-display"></div>
+                            </div>
+                            <div class="vase-shine"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="status">Breathe in...</div>
+                    
+                    <div class="metrics">
+                        <div class="bpm-display">
+                            <span id="bpm-value">0.0</span> BPM
+                        </div>
+                        <div class="timer-display">
+                            <span id="timer-remaining">00:00</span>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="controls">
-                    <button id="start-btn" class="btn">Start</button>
-                    <button id="pause-btn" class="btn" disabled>Pause</button>
-                    <button id="stop-btn" class="btn" disabled>Stop</button>
+                <div class="controls-panel">
+                    <div class="breathing-controls">
+                        <h3>Breathing Pattern</h3>
+                        <div class="control-group">
+                            <label for="inhale">Inhale (s)</label>
+                            <input type="number" id="inhale" min="1" max="10" value="4">
+                        </div>
+                        <div class="control-group">
+                            <label for="hold">Hold (s)</label>
+                            <input type="number" id="hold" min="0" max="10" value="4">
+                        </div>
+                        <div class="control-group">
+                            <label for="exhale">Exhale (s)</label>
+                            <input type="number" id="exhale" min="1" max="10" value="4">
+                        </div>
+                        <button id="apply-pattern">Apply</button>
+                    </div>
+                    
+                    <div class="timer-controls">
+                        <h3>Session Duration</h3>
+                        <div class="timer-buttons">
+                            <button class="timer-btn" data-time="180">3 min</button>
+                            <button class="timer-btn" data-time="300">5 min</button>
+                            <button class="timer-btn" data-time="600">10 min</button>
+                        </div>
+                    </div>
+                    
+                    <div class="theme-controls">
+                        <h3>Theme</h3>
+                        <div class="theme-buttons">
+                            <button class="theme-btn" data-theme="ocean">Ocean</button>
+                            <button class="theme-btn" data-theme="forest">Lake</button>
+                            <button class="theme-btn" data-theme="night">Mountain</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="settings">
-                <div class="setting-group">
-                    <label for="inhale-time">Inhale (seconds):</label>
-                    <input type="number" id="inhale-time" value="4" min="1" max="30">
+        </main>
+        
+        <footer>
+            <div class="audio-controls">
+                <button id="play-pause" aria-label="Play or pause audio">
+                    <i class="fas fa-play"></i>
+                </button>
+                <div class="volume-control">
+                    <i class="fas fa-volume-down"></i>
+                    <input type="range" id="volume" min="0" max="100" value="50">
+                    <i class="fas fa-volume-up"></i>
                 </div>
-                <div class="setting-group">
-                    <label for="hold-time">Hold (seconds):</label>
-                    <input type="number" id="hold-time" value="4" min="1" max="30">
-                </div>
-                <div class="setting-group">
-                    <label for="exhale-time">Exhale (seconds):</label>
-                    <input type="number" id="exhale-time" value="4" min="1" max="30">
-                </div>
+                <select id="sound-select">
+                    <option value="ocean">River Flowing</option>
+                    <option value="rain">Gentle Rain</option>
+                    <option value="forest">Forest Sounds</option>
+                </select>
             </div>
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Breathing App by Amlan. Take a deep breath & relax! :)</p>
-    </footer>
-
+        </footer>
+    </div>
+    
+    <audio id="background-audio" loop>
+        <source src="sounds/ocean.mp3" type="audio/mpeg">
+    </audio>
+    
     <script src="script.js"></script>
 </body>
 </html>

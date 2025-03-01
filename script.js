@@ -1,144 +1,389 @@
 // DOM Elements
-const app = {
-    elements: {
-        circle: null,
-        breathingText: null,
-        instruction: null,
-        startBtn: null,
-        pauseBtn: null,
-        stopBtn: null,
-        inhaleInput: null,
-        holdInput: null,
-        exhaleInput: null
-    },
+const vaseElement = document.querySelector('.vase');
+const waterElement = document.querySelector('.water');
+const rippleElement = document.querySelector('.ripple');
+const statusElement = document.querySelector('.status');
+const countdownElement = document.querySelector('.countdown-display');
+const bpmValueElement = document.getElementById('bpm-value');
+const timerRemainingElement = document.getElementById('timer-remaining');
 
-    state: {
-        isRunning: false,
-        isPaused: false,
-        currentPhase: null,
-        intervalId: null
-    },
+// Input elements
+const inhaleInput = document.getElementById('inhale');
+const holdInput = document.getElementById('hold');
+const exhaleInput = document.getElementById('exhale');
+const applyPatternButton = document.getElementById('apply-pattern');
+const timerButtons = document.querySelectorAll('.timer-btn');
+const themeButtons = document.querySelectorAll('.theme-btn');
+const playPauseButton = document.getElementById('play-pause');
+const volumeControl = document.getElementById('volume');
+const soundSelect = document.getElementById('sound-select');
+const backgroundAudio = document.getElementById('background-audio');
+const themeBackground = document.querySelector('.theme-background');
 
-    init: function() {
-        this.getElements();
-        this.setupEventListeners();
-        console.log('Breathing App Initialized');
-    },
-
-    getElements: function() {
-        this.elements.circle = document.querySelector('.breathing-circle');
-        this.elements.breathingText = document.querySelector('.breathing-text');
-        this.elements.instruction = document.querySelector('.breathing-instruction');
-        this.elements.startBtn = document.getElementById('start-btn');
-        this.elements.pauseBtn = document.getElementById('pause-btn');
-        this.elements.stopBtn = document.getElementById('stop-btn');
-        this.elements.inhaleInput = document.getElementById('inhale-time');
-        this.elements.holdInput = document.getElementById('hold-time');
-        this.elements.exhaleInput = document.getElementById('exhale-time');
-    },
-
-    setupEventListeners: function() {
-        this.elements.startBtn.addEventListener('click', () => this.startBreathing());
-        this.elements.pauseBtn.addEventListener('click', () => this.pauseBreathing());
-        this.elements.stopBtn.addEventListener('click', () => this.stopBreathing());
-    },
-
-    getSettings: function() {
-        return {
-            inhaleTime: this.elements.inhaleInput.value * 1000,
-            holdTime: this.elements.holdInput.value * 1000,
-            exhaleTime: this.elements.exhaleInput.value * 1000
-        };
-    },
-
-    startBreathing: function() {
-        if (this.state.isRunning && this.state.isPaused) {
-            this.state.isPaused = false;
-            this.elements.pauseBtn.textContent = 'Pause';
-            return;
-        }
-
-        this.state.isRunning = true;
-        this.elements.startBtn.disabled = true;
-        this.elements.pauseBtn.disabled = false;
-        this.elements.stopBtn.disabled = false;
-        
-        this.runBreathingCycle();
-    },
-
-    pauseBreathing: function() {
-        this.state.isPaused = !this.state.isPaused;
-        this.elements.pauseBtn.textContent = this.state.isPaused ? 'Resume' : 'Pause';
-        if (this.state.isPaused) {
-            this.elements.circle.style.animationPlayState = 'paused';
-        } else {
-            this.elements.circle.style.animationPlayState = 'running';
-        }
-    },
-
-    stopBreathing: function() {
-        this.state.isRunning = false;
-        this.state.isPaused = false;
-        clearTimeout(this.state.intervalId);
-        
-        this.elements.startBtn.disabled = false;
-        this.elements.pauseBtn.disabled = true;
-        this.elements.stopBtn.disabled = true;
-        
-        // Remove all animation classes
-        this.elements.circle.classList.remove('inhaling', 'holding', 'exhaling');
-        this.elements.breathingText.textContent = 'Breathe';
-        this.elements.instruction.textContent = 'Get ready...';
-    },
-
-    runBreathingCycle: async function() {
-        if (!this.state.isRunning) return;
-
-        const settings = this.getSettings();
-        
-        // Inhale
-        this.elements.breathingText.textContent = 'Inhale';
-        this.elements.instruction.textContent = 'Breathe in slowly';
-        this.elements.circle.classList.remove('holding', 'exhaling');
-        this.elements.circle.classList.add('inhaling');
-        this.elements.circle.style.animationDuration = `${settings.inhaleTime}ms`;
-        await this.wait(settings.inhaleTime);
-        if (!this.state.isRunning) return;
-
-        // Hold
-        this.elements.breathingText.textContent = 'Hold';
-        this.elements.instruction.textContent = 'Hold your breath';
-        this.elements.circle.classList.remove('inhaling', 'exhaling');
-        this.elements.circle.classList.add('holding');
-        await this.wait(settings.holdTime);
-        if (!this.state.isRunning) return;
-
-        // Exhale
-        this.elements.breathingText.textContent = 'Exhale';
-        this.elements.instruction.textContent = 'Breathe out slowly';
-        this.elements.circle.classList.remove('inhaling', 'holding');
-        this.elements.circle.classList.add('exhaling');
-        this.elements.circle.style.animationDuration = `${settings.exhaleTime}ms`;
-        await this.wait(settings.exhaleTime);
-        if (!this.state.isRunning) return;
-
-        // Continue cycle
-        this.runBreathingCycle();
-    },
-
-    wait: function(ms) {
-        return new Promise(resolve => {
-            const check = () => {
-                if (!this.state.isPaused) {
-                    this.state.intervalId = setTimeout(resolve, ms);
-                } else {
-                    this.state.intervalId = setTimeout(check, 100);
-                }
-            };
-            check();
-        });
-    }
+// State variables
+let breathingState = 'inhale';
+let isBreathingActive = true;
+let currentCount = 0;
+let currentCountInterval = null;
+let sessionTimer = null;
+let sessionTimeRemaining = 0;
+let breathingSettings = {
+    inhale: 4,
+    hold: 4,
+    exhale: 4
 };
 
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => app.init()); 
+// Initialize the app
+function initApp() {
+    preloadAssets();
+    loadPreferences();
+    updateBPMDisplay();
+    startBreathingAnimation();
+    setupEventListeners();
+    
+    // Add a welcome message
+    console.log('Welcome to Mindful Breathing App!');
+}
+
+// Set up event listeners
+function setupEventListeners() {
+    applyPatternButton.addEventListener('click', () => {
+        updateBreathingSettings();
+        savePreferences();
+    });
+    
+    timerButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const duration = parseInt(button.dataset.time);
+            startSessionTimer(duration);
+        });
+    });
+    
+    themeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const theme = button.dataset.theme;
+            applyTheme(theme);
+            savePreferences();
+        });
+    });
+    
+    playPauseButton.addEventListener('click', toggleAudio);
+    volumeControl.addEventListener('input', () => {
+        updateVolume();
+        savePreferences();
+    });
+    soundSelect.addEventListener('change', () => {
+        changeSound();
+        savePreferences();
+    });
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+}
+
+// Update breathing settings from input fields
+function updateBreathingSettings() {
+    breathingSettings.inhale = parseInt(inhaleInput.value) || 4;
+    breathingSettings.hold = parseInt(holdInput.value) || 4;
+    breathingSettings.exhale = parseInt(exhaleInput.value) || 4;
+    
+    // Update CSS variables for animation timing
+    document.documentElement.style.setProperty('--inhale-duration', `${breathingSettings.inhale}s`);
+    document.documentElement.style.setProperty('--hold-duration', `${breathingSettings.hold}s`);
+    document.documentElement.style.setProperty('--exhale-duration', `${breathingSettings.exhale}s`);
+    
+    // Reset the animation
+    resetBreathingAnimation();
+    updateBPMDisplay();
+}
+
+// Calculate and update BPM display
+function updateBPMDisplay() {
+    const totalCycleDuration = breathingSettings.inhale + breathingSettings.hold + breathingSettings.exhale;
+    const bpm = (60 / totalCycleDuration).toFixed(1);
+    bpmValueElement.textContent = bpm;
+}
+
+// Start the breathing animation cycle
+function startBreathingAnimation() {
+    if (!isBreathingActive) return;
+    
+    breathingState = 'inhale';
+    updateBreathingUI();
+    
+    // Schedule the next states
+    setTimeout(() => {
+        if (!isBreathingActive) return;
+        breathingState = 'hold';
+        triggerRippleAnimation();
+        updateBreathingUI();
+        
+        setTimeout(() => {
+            if (!isBreathingActive) return;
+            breathingState = 'exhale';
+            triggerRippleAnimation();
+            updateBreathingUI();
+            
+            setTimeout(() => {
+                if (isBreathingActive) {
+                    startBreathingAnimation();
+                }
+            }, breathingSettings.exhale * 1000);
+        }, breathingSettings.hold * 1000);
+    }, breathingSettings.inhale * 1000);
+}
+
+// Update UI based on current breathing state
+function updateBreathingUI() {
+    // Remove all state classes
+    waterElement.classList.remove('inhale', 'hold', 'exhale');
+    
+    // Add current state class
+    waterElement.classList.add(breathingState);
+    
+    // Update status text
+    switch (breathingState) {
+        case 'inhale':
+            statusElement.textContent = 'Breathe in...';
+            startCountdown(breathingSettings.inhale);
+            break;
+        case 'hold':
+            statusElement.textContent = 'Hold...';
+            startCountdown(breathingSettings.hold);
+            break;
+        case 'exhale':
+            statusElement.textContent = 'Breathe out...';
+            startCountdown(breathingSettings.exhale);
+            break;
+    }
+}
+
+// Start countdown for current breathing phase
+function startCountdown(duration) {
+    if (currentCountInterval) {
+        clearInterval(currentCountInterval);
+    }
+    
+    currentCount = duration;
+    updateCountdownDisplay();
+    
+    currentCountInterval = setInterval(() => {
+        currentCount--;
+        updateCountdownDisplay();
+        
+        if (currentCount <= 0) {
+            clearInterval(currentCountInterval);
+        }
+    }, 1000);
+}
+
+// Update the countdown display
+function updateCountdownDisplay() {
+    countdownElement.textContent = currentCount > 0 ? currentCount : '';
+}
+
+// Trigger ripple animation
+function triggerRippleAnimation() {
+    rippleElement.classList.remove('active');
+    // Force reflow
+    void rippleElement.offsetWidth;
+    rippleElement.classList.add('active');
+}
+
+// Reset the breathing animation
+function resetBreathingAnimation() {
+    isBreathingActive = false;
+    
+    if (currentCountInterval) {
+        clearInterval(currentCountInterval);
+    }
+    
+    // Clear any existing timeouts
+    setTimeout(() => {
+        isBreathingActive = true;
+        startBreathingAnimation();
+    }, 100);
+}
+
+// Start session timer
+function startSessionTimer(duration) {
+    // Clear any existing timer
+    if (sessionTimer) {
+        clearInterval(sessionTimer);
+    }
+    
+    sessionTimeRemaining = duration;
+    updateTimerDisplay();
+    
+    sessionTimer = setInterval(() => {
+        sessionTimeRemaining--;
+        updateTimerDisplay();
+        
+        if (sessionTimeRemaining <= 0) {
+            clearInterval(sessionTimer);
+            isBreathingActive = false;
+            statusElement.textContent = 'Session complete';
+            waterElement.classList.remove('inhale', 'hold', 'exhale');
+        }
+    }, 1000);
+}
+
+// Update timer display
+function updateTimerDisplay() {
+    const minutes = Math.floor(sessionTimeRemaining / 60);
+    const seconds = sessionTimeRemaining % 60;
+    timerRemainingElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Apply theme
+function applyTheme(theme) {
+    // Remove all theme classes
+    document.body.classList.remove('theme-ocean', 'theme-forest', 'theme-night');
+    
+    // Add selected theme class
+    document.body.classList.add(`theme-${theme}`);
+    
+    // Update background image
+    themeBackground.style.backgroundImage = `url('images/${theme}.jpg')`;
+}
+
+// Audio controls
+function toggleAudio() {
+    const icon = playPauseButton.querySelector('i');
+    
+    if (backgroundAudio.paused) {
+        backgroundAudio.play();
+        icon.classList.remove('fa-play');
+        icon.classList.add('fa-pause');
+    } else {
+        backgroundAudio.pause();
+        icon.classList.remove('fa-pause');
+        icon.classList.add('fa-play');
+    }
+}
+
+function updateVolume() {
+    backgroundAudio.volume = volumeControl.value / 100;
+}
+
+function changeSound() {
+    const soundType = soundSelect.value;
+    backgroundAudio.src = `sounds/${soundType}.mp3`;
+    
+    // If audio was playing, continue playing the new sound
+    if (!playPauseButton.querySelector('i').classList.contains('fa-play')) {
+        backgroundAudio.play();
+    }
+}
+
+// Add error handling for audio and image loading
+function preloadAssets() {
+    // Preload theme images
+    const themes = ['ocean', 'forest', 'night'];
+    themes.forEach(theme => {
+        const img = new Image();
+        img.src = `images/${theme}.jpg`;
+    });
+    
+    // Preload audio files
+    const sounds = ['ocean', 'rain', 'forest'];
+    sounds.forEach(sound => {
+        const audio = new Audio();
+        audio.preload = 'metadata';
+        audio.src = `sounds/${sound}.mp3`;
+    });
+}
+
+// Handle audio errors
+backgroundAudio.addEventListener('error', (e) => {
+    console.error('Audio error:', e);
+    alert('There was an issue loading the audio. Please try a different sound.');
+});
+
+// Add service worker registration for offline capability
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').then(registration => {
+            console.log('ServiceWorker registration successful');
+        }).catch(error => {
+            console.log('ServiceWorker registration failed:', error);
+        });
+    });
+}
+
+// Save user preferences to localStorage
+function savePreferences() {
+    const preferences = {
+        inhale: breathingSettings.inhale,
+        hold: breathingSettings.hold,
+        exhale: breathingSettings.exhale,
+        theme: document.body.className.includes('theme-') ? 
+               document.body.className.split('theme-')[1].split(' ')[0] : 'ocean',
+        volume: volumeControl.value,
+        sound: soundSelect.value
+    };
+    
+    localStorage.setItem('breathingPreferences', JSON.stringify(preferences));
+}
+
+// Load user preferences from localStorage
+function loadPreferences() {
+    const savedPrefs = localStorage.getItem('breathingPreferences');
+    if (savedPrefs) {
+        try {
+            const preferences = JSON.parse(savedPrefs);
+            
+            // Apply saved settings
+            inhaleInput.value = preferences.inhale || 4;
+            holdInput.value = preferences.hold || 4;
+            exhaleInput.value = preferences.exhale || 4;
+            
+            // Apply theme
+            if (preferences.theme) {
+                applyTheme(preferences.theme);
+            }
+            
+            // Apply audio settings
+            if (preferences.volume) {
+                volumeControl.value = preferences.volume;
+                updateVolume();
+            }
+            
+            if (preferences.sound) {
+                soundSelect.value = preferences.sound;
+                changeSound();
+            }
+            
+            // Update breathing settings
+            updateBreathingSettings();
+        } catch (e) {
+            console.error('Error loading preferences:', e);
+        }
+    }
+}
+
+// Handle keyboard shortcuts
+function handleKeyboardShortcuts(e) {
+    // Space bar to start/pause session
+    if (e.code === 'Space' && !e.target.matches('input, button, select')) {
+        e.preventDefault();
+        if (sessionTimer) {
+            clearInterval(sessionTimer);
+            sessionTimer = null;
+            isBreathingActive = false;
+            statusElement.textContent = 'Paused';
+        } else {
+            isBreathingActive = true;
+            startBreathingAnimation();
+            startSessionTimer(300); // Default 5 min session
+        }
+    }
+    
+    // M key to mute/unmute
+    if (e.code === 'KeyM' && !e.target.matches('input, button, select')) {
+        toggleAudio();
+    }
+}
+
+// Initialize the app when the page loads
+window.addEventListener('DOMContentLoaded', initApp); 
