@@ -59,12 +59,12 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('images/ocean.jpg');
+    background-image: url('images/night.jpg');
     background-size: cover;
     background-position: center;
-    opacity: 0.2;
+    opacity: 0.4;
+    filter: brightness(1) contrast(1.2);
     z-index: -1;
-    transition: background-image 1s ease;
 }
 
 header {
@@ -429,29 +429,102 @@ button:focus, input:focus, select:focus {
 }
 
 :root {
-    /* Base colors */
-    --primary-color: #3498db;
-    --secondary-color: #2980b9;
-    --text-color: #333;
-    --background-color: #f5f5f5;
+    /* Base colors - using night theme */
+    --primary-color: #34495e;
+    --secondary-color: #2c3e50;
+    --text-color: #f5f5f5;
+    --background-color: #1a1a1a;
     
-    /* Vase properties - updated to be circular */
+    /* Vase properties */
     --vase-height: 250px;
     --vase-width: 250px;
     --vase-color: rgba(220, 240, 255, 0.4);
-    --water-color: rgba(52, 152, 219, 0.6);
+    --water-color: rgba(52, 73, 94, 0.6);
     --ripple-color: rgba(255, 255, 255, 0.5);
     
     /* Animation timing */
     --inhale-duration: 4s;
     --hold-duration: 4s;
     --exhale-duration: 4s;
-    
-    /* Theme colors */
-    --theme-ocean-primary: #3498db;
-    --theme-ocean-secondary: #2980b9;
-    --theme-forest-primary: #27ae60;
-    --theme-forest-secondary: #2ecc71;
-    --theme-night-primary: #34495e;
-    --theme-night-secondary: #2c3e50;
-} 
+}
+
+/* Remove theme variations since we're only using one theme */
+/* .theme-ocean .theme-background,
+.theme-forest .theme-background,
+.theme-night .theme-background {
+    /* Remove these rules */
+
+/* Circular button styling */
+.circular-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.circular-btn:hover {
+    background: var(--secondary-color);
+    transform: scale(1.05);
+}
+
+.circular-btn:active {
+    transform: scale(0.95);
+}
+
+.circular-btn i {
+    font-size: 1.5rem;
+}
+
+/* Adjust spacing for the new button */
+.status {
+    margin-top: 0.5rem;
+}
+
+/* Add styles for disabled button */
+.circular-btn.disabled {
+    background-color: #888;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.circular-btn.disabled:hover {
+    background-color: #888;
+    transform: none;
+}
+
+/* Add styles for active timer button */
+.timer-btn.active {
+    background-color: var(--secondary-color);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+}
+
+/* Add notification styles */
+#notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+#notification.show {
+    opacity: 1;
+}

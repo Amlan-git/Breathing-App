@@ -20,6 +20,9 @@ const soundSelect = document.getElementById('sound-select');
 const backgroundAudio = document.getElementById('background-audio');
 const themeBackground = document.querySelector('.theme-background');
 
+// Add to DOM Elements section
+const startPauseBtn = document.getElementById('start-pause-btn');
+
 // State variables
 let breathingState = 'inhale';
 let isBreathingActive = true;
@@ -32,17 +35,41 @@ let breathingSettings = {
     hold: 4,
     exhale: 4
 };
+let isTimerSet = false;
 
 // Initialize the app
 function initApp() {
     preloadAssets();
     loadPreferences();
     updateBPMDisplay();
+    
+    // Set initial button state
+    const icon = startPauseBtn.querySelector('i');
+    if (isBreathingActive) {
+        icon.classList.remove('fa-play');
+        icon.classList.add('fa-pause');
+    } else {
+        icon.classList.remove('fa-pause');
+        icon.classList.add('fa-play');
+    }
+    
+    // Initially disable start button
+    updateStartButtonState();
+    
+    // Check if there's a saved timer
+    if (sessionTimeRemaining > 0) {
+        isTimerSet = true;
+        updateStartButtonState();
+    }
+    
     startBreathingAnimation();
     setupEventListeners();
     
+    // Apply the night theme by default
+    document.body.classList.add('theme-night');
+    
     // Add a welcome message
-    console.log('Welcome to Mindful Breathing App!');
+    console.log('Welcome to BreatheEasy App!');
 }
 
 // Set up event listeners
@@ -56,14 +83,14 @@ function setupEventListeners() {
         button.addEventListener('click', () => {
             const duration = parseInt(button.dataset.time);
             startSessionTimer(duration);
-        });
-    });
-    
-    themeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const theme = button.dataset.theme;
-            applyTheme(theme);
-            savePreferences();
+            isTimerSet = true;
+            
+            // Update start button state
+            updateStartButtonState();
+            
+            // Highlight the selected button
+            timerButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
         });
     });
     
@@ -79,6 +106,9 @@ function setupEventListeners() {
     
     // Add keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcuts);
+    
+    // Add event listener for start/pause button
+    startPauseBtn.addEventListener('click', toggleBreathing);
 }
 
 // Update breathing settings from input fields
@@ -235,18 +265,6 @@ function updateTimerDisplay() {
     timerRemainingElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Apply theme
-function applyTheme(theme) {
-    // Remove all theme classes
-    document.body.classList.remove('theme-ocean', 'theme-forest', 'theme-night');
-    
-    // Add selected theme class
-    document.body.classList.add(`theme-${theme}`);
-    
-    // Update background image
-    themeBackground.style.backgroundImage = `url('images/${theme}.jpg')`;
-}
-
 // Audio controls
 function toggleAudio() {
     const icon = playPauseButton.querySelector('i');
@@ -278,12 +296,9 @@ function changeSound() {
 
 // Add error handling for audio and image loading
 function preloadAssets() {
-    // Preload theme images
-    const themes = ['ocean', 'forest', 'night'];
-    themes.forEach(theme => {
-        const img = new Image();
-        img.src = `images/${theme}.jpg`;
-    });
+    // Preload only the night theme image
+    const img = new Image();
+    img.src = 'images/night.jpg';
     
     // Preload audio files
     const sounds = ['ocean', 'rain', 'forest'];
@@ -317,10 +332,10 @@ function savePreferences() {
         inhale: breathingSettings.inhale,
         hold: breathingSettings.hold,
         exhale: breathingSettings.exhale,
-        theme: document.body.className.includes('theme-') ? 
-               document.body.className.split('theme-')[1].split(' ')[0] : 'ocean',
         volume: volumeControl.value,
-        sound: soundSelect.value
+        sound: soundSelect.value,
+        timerSet: isTimerSet,
+        timeRemaining: sessionTimeRemaining
     };
     
     localStorage.setItem('breathingPreferences', JSON.stringify(preferences));
@@ -338,11 +353,6 @@ function loadPreferences() {
             holdInput.value = preferences.hold || 4;
             exhaleInput.value = preferences.exhale || 4;
             
-            // Apply theme
-            if (preferences.theme) {
-                applyTheme(preferences.theme);
-            }
-            
             // Apply audio settings
             if (preferences.volume) {
                 volumeControl.value = preferences.volume;
@@ -352,6 +362,15 @@ function loadPreferences() {
             if (preferences.sound) {
                 soundSelect.value = preferences.sound;
                 changeSound();
+            }
+            
+            // Restore timer state if available
+            if (preferences.timerSet) {
+                isTimerSet = true;
+                if (preferences.timeRemaining > 0) {
+                    sessionTimeRemaining = preferences.timeRemaining;
+                    updateTimerDisplay();
+                }
             }
             
             // Update breathing settings
@@ -367,22 +386,82 @@ function handleKeyboardShortcuts(e) {
     // Space bar to start/pause session
     if (e.code === 'Space' && !e.target.matches('input, button, select')) {
         e.preventDefault();
-        if (sessionTimer) {
-            clearInterval(sessionTimer);
-            sessionTimer = null;
-            isBreathingActive = false;
-            statusElement.textContent = 'Paused';
-        } else {
-            isBreathingActive = true;
-            startBreathingAnimation();
-            startSessionTimer(300); // Default 5 min session
-        }
+        toggleBreathing();
     }
     
     // M key to mute/unmute
     if (e.code === 'KeyM' && !e.target.matches('input, button, select')) {
         toggleAudio();
     }
+}
+
+// Add new function to toggle breathing
+function toggleBreathing() {
+    // Check if timer is set
+    if (!isTimerSet) {
+        showNotification("Please set a duration first");
+        return;
+    }
+    
+    const icon = startPauseBtn.querySelector('i');
+    
+    if (isBreathingActive) {
+        // Pause breathing
+        isBreathingActive = false;
+        statusElement.textContent = 'Paused';
+        
+        // Clear any existing intervals
+        if (currentCountInterval) {
+            clearInterval(currentCountInterval);
+        }
+        
+        // Change icon to play
+        icon.classList.remove('fa-pause');
+        icon.classList.add('fa-play');
+    } else {
+        // Resume breathing
+        isBreathingActive = true;
+        
+        // Change icon to pause
+        icon.classList.remove('fa-play');
+        icon.classList.add('fa-pause');
+        
+        // Restart animation
+        startBreathingAnimation();
+    }
+}
+
+// Add function to update start button state
+function updateStartButtonState() {
+    startPauseBtn.disabled = !isTimerSet;
+    
+    if (!isTimerSet) {
+        startPauseBtn.classList.add('disabled');
+        startPauseBtn.title = "Please set a duration first";
+    } else {
+        startPauseBtn.classList.remove('disabled');
+        startPauseBtn.title = "Start or pause breathing exercise";
+    }
+}
+
+// Add notification function
+function showNotification(message) {
+    // Create notification element if it doesn't exist
+    let notification = document.getElementById('notification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'notification';
+        document.body.appendChild(notification);
+    }
+    
+    // Set message and show notification
+    notification.textContent = message;
+    notification.classList.add('show');
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
 }
 
 // Initialize the app when the page loads

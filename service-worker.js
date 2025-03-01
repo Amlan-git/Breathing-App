@@ -1,11 +1,9 @@
-const CACHE_NAME = 'breathing-app-v1';
+const CACHE_NAME = 'breathing-app-v3';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
   '/script.js',
-  '/images/ocean.jpg',
-  '/images/forest.jpg',
   '/images/night.jpg',
   '/sounds/ocean.mp3',
   '/sounds/rain.mp3',

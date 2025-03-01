@@ -1,6 +1,6 @@
 {
-  "name": "Mindful Breathing Exercise",
-  "short_name": "Breathing",
+  "name": "Breath Easy",
+  "short_name": "Breath Easy",
   "description": "A customizable breathing exercise app for mindfulness and relaxation",
   "start_url": "/index.html",
   "display": "standalone",
