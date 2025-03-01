@@ -25,7 +25,7 @@ const startPauseBtn = document.getElementById('start-pause-btn');
 
 // State variables
 let breathingState = 'inhale';
-let isBreathingActive = true;
+let isBreathingActive = false;
 let currentCount = 0;
 let currentCountInterval = null;
 let sessionTimer = null;
@@ -45,13 +45,8 @@ function initApp() {
     
     // Set initial button state
     const icon = startPauseBtn.querySelector('i');
-    if (isBreathingActive) {
-        icon.classList.remove('fa-play');
-        icon.classList.add('fa-pause');
-    } else {
-        icon.classList.remove('fa-pause');
-        icon.classList.add('fa-play');
-    }
+    icon.classList.remove('fa-pause');
+    icon.classList.add('fa-play');
     
     // Initially disable start button
     updateStartButtonState();
@@ -62,7 +57,10 @@ function initApp() {
         updateStartButtonState();
     }
     
-    startBreathingAnimation();
+    // Set initial water level and status
+    waterElement.classList.remove('inhale', 'hold', 'exhale');
+    statusElement.textContent = 'Ready to begin';
+    
     setupEventListeners();
     
     // Apply the night theme by default
@@ -254,6 +252,11 @@ function startSessionTimer(duration) {
             isBreathingActive = false;
             statusElement.textContent = 'Session complete';
             waterElement.classList.remove('inhale', 'hold', 'exhale');
+            
+            // Reset start button to play state
+            const icon = startPauseBtn.querySelector('i');
+            icon.classList.remove('fa-pause');
+            icon.classList.add('fa-play');
         }
     }, 1000);
 }
@@ -375,6 +378,9 @@ function loadPreferences() {
             
             // Update breathing settings
             updateBreathingSettings();
+            
+            // Don't automatically start the animation
+            isBreathingActive = false;
         } catch (e) {
             console.error('Error loading preferences:', e);
         }
